@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <title>Map S3</title>
+    <style>
+      html, body { height: 100%; margin: 0; padding: 0; }
+      #map { height: 100%; }
+      #coords { background-color: black; color: white; padding: 5px; }
+      #bouton { position: absolute; top: 15px; left: 50px; z-index: 3}
+      #floating-panel {
+      position: absolute;
+      top: 50px;
+      left: 10px;
+      padding: 5px;
+      background: #fff;
+      border: 3px solid #000;
+      z-index: 3;
+      text-align: left;
+      font-size: 75%;
+      line-height: 30px;
+      font-family: 'Roboto','sans-serif';}
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="coords" style="font-size: 130%" ></div>
+	<div id="query"></div>
+    <div id="bouton"><input type="button" style="font-size: 80%" value="Afficher grille repere" onclick="affichage();"></div>
+    <div id="floating-panel">
+        Pseudo joueur <img src="http://maps.google.com/mapfiles/ms/micons/green.png" style="width:15px;height:15px;">
+        <input type="text" id="search-string_0" style="font-size: 90%">
+        <input type="button" id="zoom" style="font-size: 90%" onclick="changeMap_0()" value="Afficher"><br>
+        TAG Alliance <img src="https://storage.googleapis.com/support-kms-prod/SNP_2752129_en_v0" style="width:10px;height:10px;">
+        <input type="text" id="search-string_1" style="font-size: 90%">
+        <input type="button" style="font-size: 90%" onclick="changeMap_1()" value="Afficher"><br>
+        TAG Alliance <img src="https://storage.googleapis.com/support-kms-prod/SNP_2752068_en_v0" style="width:10px;height:10px;">
+        <input type="text" id="search-string_2" style="font-size: 90%">
+        <input type="button" style="font-size: 90%" onclick="changeMap_2()" value="Afficher"><br>
+        TAG Alliance <img src="https://storage.googleapis.com/support-kms-prod/SNP_2752063_en_v0" style="width:10px;height:10px;">
+        <input type="text" id="search-string_3" style="font-size: 90%">
+        <input type="button" style="font-size: 90%" onclick="changeMap_3()" value="Afficher"><br>
+        TAG Alliance <img src="https://storage.googleapis.com/support-kms-prod/SNP_2752125_en_v0" style="width:10px;height:10px;">
+        <input type="text" id="search-string_4" style="font-size: 90%">
+        <input type="button" style="font-size: 90%" onclick="changeMap_4()" value="Afficher"><br>
+        <input type="button" style="font-size: 100%" value="Afficher zones a fort TDC" onclick="toggleHeatmap()">
+    </div>
+    
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+        <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+        <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/base/jquery-ui.css" type="text/css" />
+        <script type="text/javascript" src="http://maps.google.com/maps/api/js?libraries=visualization&sensor=false"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+        <script type="text/javascript">
+    
+    google.load('visualization', '1', {'packages':['corechart', 'table', 'geomap']});
+    
+    var map;
+    var heatmap;
+    var layer_0;
+    var layer_1;
+    var layer_2;
+    var layer_3;
+    var layer_4;
+    
+    function fetchData() {
+    var encodedQuery1 = encodeURIComponent("SELECT 'Y','X', 'terrain'  FROM 15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP WHERE 'terrain' >= 10000000 AND 'terrain' <= 100000000000");
+    var url1 = ['https://www.googleapis.com/fusiontables/v2/query?sql=' + encodedQuery1 + '&key=AIzaSyDEwTVpPn9CHeGQLtKzcUFyxWJLg85P4yQ&callback=?'];
+
+        $.ajax({
+          url: url1.join(''),
+          dataType: 'jsonp',
+          success: onDataFetched
+        });
+    }
+
+    function onDataFetched(data) {
+    var rows = data['rows'];
+    var heatmapData = [];
+
+    for (var i in rows) {
+        var lat1 = rows[i][0];
+        var lng1 = rows[i][1];
+        var weight = rows[i][2];
+        heatmapData.push({
+            location: new google.maps.LatLng(lat1/100,lng1/100),
+            weight: Number(rows[i][2])
+            });
+      }
+      
+        heatmap = new google.maps.visualization.HeatmapLayer({
+          data: heatmapData,
+          radius: 15,
+          opacity: 0.5,
+      });
+      heatmap.setMap(null);
+     }
+    
+    function toggleHeatmap() {
+    heatmap.setMap(heatmap.getMap() ? null : map);
+    }
+    
+
+    function initialize() {
+    map = new google.maps.Map(document.getElementById('map'), {
+    backgroundColor: '#c9ae63',
+    center: new google.maps.LatLng(3,0),
+    zoom: 6,
+    panControl:true,
+    zoomControl:true,
+    mapTypeControl:true,
+    streetViewControl: false,
+    mapTypeControlOptions: {
+      mapTypeIds: ['S3']}
+    });
+
+    fetchData();
+    
+    var S3MapType = new google.maps.ImageMapType({
+    getTileUrl: function(coord, zoom) {
+        var normalizedCoord = getNormalizedCoord(coord, zoom);
+        if (!normalizedCoord) {
+          return null;
+        }
+        var bound = Math.pow(2, zoom);
+        return '' +
+            '/' + zoom + '/' + normalizedCoord.x + '/' +
+            (bound - normalizedCoord.y - 1) + '.jpg';
+    },
+    tileSize: new google.maps.Size(256, 256),
+    maxZoom: 12,
+    minZoom: 7,
+    name: 'S3'
+  });
+
+    map.mapTypes.set('S3', S3MapType);
+    map.setMapTypeId('S3');
+
+    /////////////////// Image carte ////////////////////
+
+    var overlay;
+    testOverlay.prototype = new google.maps.OverlayView();
+    var swBound = new google.maps.LatLng(-0.2, -0.2);
+    var neBound = new google.maps.LatLng(16.2, 0.7);
+    var bounds = new google.maps.LatLngBounds(swBound, neBound);
+    var srcImage = 'https://docs.google.com/uc?id=0B7sgJk44Sjt2X19wZGdteVZRam8';
+
+    overlay = new testOverlay(bounds, srcImage, map);
+
+    function testOverlay(bounds, image, map){
+    this.bounds_ = bounds;
+    this.image_ = image;
+    this.map_ = map;
+    this.div_ = null;
+    this.setMap(map);
+    };
+
+    testOverlay.prototype.onAdd = function() {
+    var div = document.createElement('div');
+    div.style.borderStyle = 'none';
+    div.style.borderWidth = '0px';
+    div.style.position = 'absolute';
+    var img = document.createElement('img');
+    img.src = this.image_;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.opacity = '1';
+    img.style.position = 'absolute';
+    div.appendChild(img);
+    this.div_ = div;
+    var panes = this.getPanes();
+    panes.overlayLayer.appendChild(div);
+  };
+
+    testOverlay.prototype.draw = function() {
+    var overlayProjection = this.getProjection();
+    var sw = overlayProjection.fromLatLngToDivPixel(this.bounds_.getSouthWest());
+    var ne =     overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
+    var div = this.div_;
+    div.style.left = sw.x + 'px';
+    div.style.top = ne.y + 'px';
+    div.style.width = (ne.x - sw.x) + 'px';
+    div.style.height = (sw.y - ne.y) + 'px';
+    };
+
+    testOverlay.prototype.updateBounds = function(bounds){
+    this.bounds_ = bounds;
+    this.draw();
+    };
+
+    testOverlay.prototype.onRemove = function() {
+    this.div_.parentNode.removeChild(this.div_);
+    this.div_ = null;
+    };
+
+    
+
+    //////////////// Lignes verticales ////////////////
+    
+    var lines = [];
+
+    affichage = function(){ 
+    var p; for (p = 0; p < lines.length; p++) 
+    if(lines[p].getMap(map)) { 
+        lines[p].setMap(null); 
+    } else { 
+        lines[p].setMap(map); } };
+    
+    var line5 = new google.maps.Polyline({
+    clickable: false,
+    strokeColor: '#00000F',
+    strokeOpacity: 0.3,
+    strokeWeight: 0.5,
+    path: [{lat: 0, lng: 0.025},{lat: 16, lng: 0.025},{lat: 16, lng: 0.05},{lat: 0, lng: 0.05},{lat: 0, lng: 0.075},{lat: 16, lng: 0.075},{lat: 16, lng: 0.1},{lat: 0, lng: 0.1},{lat: 0, lng: 0.125},{lat: 16, lng: 0.125},{lat: 16, lng: 0.15},{lat: 0, lng: 0.15},{lat: 0, lng: 0.175},{lat: 16, lng: 0.175},{lat: 16, lng: 0.2},{lat: 0, lng: 0.2},{lat: 0, lng: 0.225},{lat: 16, lng: 0.225},{lat: 16, lng: 0.25},{lat: 0, lng: 0.25},{lat: 0, lng: 0.275},{lat: 16, lng: 0.275},{lat: 16, lng: 0.3},{lat: 0, lng: 0.3},{lat: 0, lng: 0.325},{lat: 16, lng: 0.325},{lat: 16, lng: 0.35},{lat: 0, lng: 0.35},{lat: 0, lng: 0.375},{lat: 16, lng: 0.375},{lat: 16, lng: 0.4},{lat: 0, lng: 0.4},{lat: 0, lng: 0.425},{lat: 16, lng: 0.425},{lat: 16, lng: 0.45},{lat: 0, lng: 0.45},{lat: 0, lng: 0.475},{lat: 16, lng: 0.475}],
+    map: (null)
+  });
+    lines.push(line5);
+
+
+    //////////////// Lignes horizontales ////////////////
+
+    var line6 = new google.maps.Polyline({
+    clickable: false,
+    strokeColor: '#00000F',
+    strokeOpacity: 0.3,
+    strokeWeight: 0.5,
+    path: [{lat: 0.025, lng: 0},{lat: 0.025, lng: 0.5},{lat: 0.05, lng: 0.5},{lat: 0.05, lng: 0},{lat: 0.075, lng: 0},{lat: 0.075, lng: 0.5},{lat: 0.1, lng: 0.5},{lat: 0.1, lng: 0},{lat: 0.125, lng: 0},{lat: 0.125, lng: 0.5},{lat: 0.15, lng: 0.5}],
+    map: (null)
+  });
+    lines.push(line6);
+
+
+
+    ////////////////  Lignes rouges  ////////////////
+  
+    var line3 = new google.maps.Polyline({
+    strokeColor: 'red',
+    strokeOpacity: 0.5,
+    strokeWeight: 1,
+    path: [{lat: 16, lng: 0}, {lat: 16, lng: 0.5}],
+    map: map
+  });
+
+    var line4 = new google.maps.Polyline({
+    strokeColor: 'red',
+    strokeOpacity: 0.5,
+    strokeWeight: 1,
+    path: [{lat: 0, lng: 0.5}, {lat: 16, lng: 0.5}],
+    map: map
+  });
+
+    //////////////// Axes flèches ////////////////
+  
+    var lineSymbol = {
+    path: google.maps.SymbolPath.FORWARD_OPEN_ARROW
+  };
+
+    var line1 = new google.maps.Polyline({
+    strokeColor: 'red',
+    strokeOpacity: 0.5,
+    strokeWeight: 2,
+    path: [{lat: 0, lng: 0}, {lat: 0, lng: 3}],
+    icons: [{
+      icon: lineSymbol,
+      offset: '100%'
+    }],
+    map: map
+  });
+
+    var line2 = new google.maps.Polyline({
+    strokeColor: 'red',
+    strokeOpacity: 0.5,
+    strokeWeight: 2,
+    path: [{lat: 0, lng: 0}, {lat: 20, lng: 0}],
+    icons: [{
+      icon: lineSymbol,
+      offset: '100%'
+    }],
+    map: map
+  });
+
+    //////////////// Fusion Table ////////////////
+  
+    layer_0 = new google.maps.FusionTablesLayer({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP"
+        },
+        styleId: 1,
+        templateId: 5
+      });
+    layer_1 = new google.maps.FusionTablesLayer({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP"
+        },
+        styleId: 2,
+        templateId: 5
+      });
+    layer_2 = new google.maps.FusionTablesLayer({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP"
+        },
+        styleId: 3,
+        templateId: 5
+      });
+    layer_3 = new google.maps.FusionTablesLayer({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP"
+        },
+        styleId: 4,
+        templateId: 5
+      });
+    layer_4 = new google.maps.FusionTablesLayer({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP"
+        },
+        styleId: 5,
+        templateId: 5
+      });
+    
+    
+    
+    //////////////// Affichage coordonnées ////////////////
+    
+    var coordsDiv = document.getElementById('coords');
+    map.controls[google.maps.ControlPosition.TOP_CENTER].push(coordsDiv);
+    map.addListener('mousemove', function(event) {
+    coordsDiv.textContent =
+        'Y=' + Math.round(event.latLng.lat()*100) + ' et ' +
+        'X=' + Math.round(event.latLng.lng()*100);
+    });
+
+
+    // Normalizes the coords that tiles repeat across the x axis (horizontally)
+    // like the standard Google map tiles.
+    function getNormalizedCoord(coord, zoom) {
+    var y = coord.y;
+    var x = coord.x;
+
+    // tile range in one direction range is dependent on zoom level
+    // 0 = 1 tile, 1 = 2 tiles, 2 = 4 tiles, 3 = 8 tiles, etc
+    var tileRange = 1 << zoom;
+
+    // don't repeat across y-axis (vertically)
+    if (y < 0 || y >= tileRange) {
+    return null;
+    }
+
+    // repeat across x-axis
+    if (x < 0 || x >= tileRange) {
+    x = (x % tileRange + tileRange) % tileRange;
+    }
+
+    return {x: x, y: y};
+  }
+};
+
+    //////////////// Fonction Afficher ////////////////
+
+    function changeMap_0() {
+      var whereClause;
+      var searchString = document.getElementById('search-string_0').value.replace(/'/g, "\\'");
+      var queryText = encodeURIComponent("SELECT 'Y','X' FROM 15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP WHERE 'Pseudo' = '" + searchString + "'");
+      if (searchString != '--Select--') {
+        whereClause = "'Pseudo' = '" + searchString + "'";
+      }
+      layer_0.setOptions({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP",
+          where: whereClause
+        },
+      map: map,
+      });
+        var query = new google.visualization.Query('http://www.google.com/fusiontables/gvizdata?tq=' + queryText + '&key=AIzaSyDEwTVpPn9CHeGQLtKzcUFyxWJLg85P4yQ');
+        query.send(zoomTo);
+    }
+
+    function zoomTo(response) {
+        if (!response) {
+            alert('no response');
+            return;
+            }
+        if (response.isError()) {
+            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+            return;
+            } 
+            numRows = response.getDataTable().getNumberOfRows();
+            numCols = response.getDataTable().getNumberOfColumns();
+            var lat = response.getDataTable().getValue(0,0)/100;
+            var lng = response.getDataTable().getValue(0,1)/100;
+            map.setCenter(new google.maps.LatLng(lat,lng));
+            map.setZoom(11);
+        };
+ 
+       
+    function changeMap_1() {
+      var whereClause;
+      var searchString = document.getElementById('search-string_1').value.replace(/'/g, "\\'");
+      if (searchString != '--Select--') {
+        whereClause = "'Alliance' CONTAINS IGNORING CASE '" + searchString + "'";
+      }
+      layer_1.setOptions({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP",
+          where: whereClause
+        },
+      map: map,
+      });
+      map.setCenter(new google.maps.LatLng(3,0.25));
+      map.setZoom(7); 
+    };
+
+    function changeMap_2() {
+      var whereClause;
+      var searchString = document.getElementById('search-string_2').value.replace(/'/g, "\\'");
+      if (searchString != '--Select--') {
+        whereClause = "'Alliance' = '" + searchString + "'";
+      }
+      layer_2.setOptions({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP",
+          where: whereClause
+        },
+      map: map,
+      });
+      map.setCenter(new google.maps.LatLng(3,0.25));
+      map.setZoom(7); 
+    };
+    
+    function changeMap_3() {
+      var whereClause;
+      var searchString = document.getElementById('search-string_3').value.replace(/'/g, "\\'");
+      if (searchString != '--Select--') {
+        whereClause = "'Alliance' = '" + searchString + "'";
+      }
+      layer_3.setOptions({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP",
+          where: whereClause
+        },
+      map: map,
+      });
+      map.setCenter(new google.maps.LatLng(3,0.25));
+      map.setZoom(7); 
+    };
+    
+    function changeMap_4() {
+      var whereClause;
+      var searchString = document.getElementById('search-string_4').value.replace(/'/g, "\\'");
+      if (searchString != '--Select--') {
+        whereClause = "'Alliance' = '" + searchString + "'";
+      }
+      layer_4.setOptions({
+        query: {
+          select: "col15",
+          from: "15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP",
+          where: whereClause
+        },
+      map: map,
+      });
+      map.setCenter(new google.maps.LatLng(3,0.25));
+      map.setZoom(7); 
+    };
+
+    
+    google.maps.event.addDomListener(window, 'load', initialize);
+    
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDEwTVpPn9CHeGQLtKzcUFyxWJLg85P4yQ&signed_in=true&libraries=visualization&callback=initialize" async defer>
+    </script>
+</html>
