@@ -46,10 +46,7 @@
         <input type="button" style="font-size: 100%" value="Afficher zones a fort TDC" onclick="toggleHeatmap()">
     </div>
     
-    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
-        <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-        <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.14/themes/base/jquery-ui.css" type="text/css" />
-        <script type="text/javascript" src="http://maps.google.com/maps/api/js?libraries=visualization&sensor=false"></script>
+    	<script type="text/javascript" src="http://www.google.com/jsapi"></script>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
@@ -178,7 +175,7 @@
     testOverlay.prototype.draw = function() {
     var overlayProjection = this.getProjection();
     var sw = overlayProjection.fromLatLngToDivPixel(this.bounds_.getSouthWest());
-    var ne =     overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
+    var ne = overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
     var div = this.div_;
     div.style.left = sw.x + 'px';
     div.style.top = ne.y + 'px';
@@ -215,8 +212,8 @@
     strokeWeight: 0.5,
     path: [{lat: 0, lng: 0.025},{lat: 16, lng: 0.025},{lat: 16, lng: 0.05},{lat: 0, lng: 0.05},{lat: 0, lng: 0.075},{lat: 16, lng: 0.075},{lat: 16, lng: 0.1},{lat: 0, lng: 0.1},{lat: 0, lng: 0.125},{lat: 16, lng: 0.125},{lat: 16, lng: 0.15},{lat: 0, lng: 0.15},{lat: 0, lng: 0.175},{lat: 16, lng: 0.175},{lat: 16, lng: 0.2},{lat: 0, lng: 0.2},{lat: 0, lng: 0.225},{lat: 16, lng: 0.225},{lat: 16, lng: 0.25},{lat: 0, lng: 0.25},{lat: 0, lng: 0.275},{lat: 16, lng: 0.275},{lat: 16, lng: 0.3},{lat: 0, lng: 0.3},{lat: 0, lng: 0.325},{lat: 16, lng: 0.325},{lat: 16, lng: 0.35},{lat: 0, lng: 0.35},{lat: 0, lng: 0.375},{lat: 16, lng: 0.375},{lat: 16, lng: 0.4},{lat: 0, lng: 0.4},{lat: 0, lng: 0.425},{lat: 16, lng: 0.425},{lat: 16, lng: 0.45},{lat: 0, lng: 0.45},{lat: 0, lng: 0.475},{lat: 16, lng: 0.475}],
     clickable: false,
-	map: (null)
-  });
+    map: (null)
+    });
     lines.push(line5);
 
 
@@ -228,8 +225,8 @@
     strokeWeight: 0.5,
     path: [{lat: 0.025, lng: 0},{lat: 0.025, lng: 0.5},{lat: 0.05, lng: 0.5},{lat: 0.05, lng: 0}],
     clickable: false,
-	map: (null)
-  });
+    map: (null)
+    });
     lines.push(line6);
 
 
@@ -241,18 +238,18 @@
     strokeOpacity: 0.5,
     strokeWeight: 1,
     path: [{lat: 16, lng: 0}, {lat: 16, lng: 0.5}],
-	clickable: false,
+    clickable: false,
     map: map
-  });
+    });
 
     var line4 = new google.maps.Polyline({
     strokeColor: 'red',
     strokeOpacity: 0.5,
     strokeWeight: 1,
     path: [{lat: 0, lng: 0.5}, {lat: 16, lng: 0.5}],
-	clickable: false,
+    clickable: false,
     map: map
-  });
+    });
 
     //////////////// Axes fleches ////////////////
   
@@ -269,9 +266,9 @@
       icon: lineSymbol,
       offset: '100%'
     }],
-	clickable: false,
+    clickable: false,
     map: map
-  });
+    });
 
     var line2 = new google.maps.Polyline({
     strokeColor: 'red',
@@ -282,9 +279,9 @@
       icon: lineSymbol,
       offset: '100%'
     }],
-	clickable: false,
+    clickable: false,
     map: map
-  });
+    });
 
     //////////////// Fusion Table ////////////////
   
@@ -296,6 +293,7 @@
         styleId: 1,
         templateId: 5
       });
+      
     layer_1 = new google.maps.FusionTablesLayer({
         query: {
           select: "col15",
@@ -304,6 +302,7 @@
         styleId: 2,
         templateId: 5
       });
+      
     layer_2 = new google.maps.FusionTablesLayer({
         query: {
           select: "col15",
@@ -312,6 +311,7 @@
         styleId: 3,
         templateId: 5
       });
+      
     layer_3 = new google.maps.FusionTablesLayer({
         query: {
           select: "col15",
@@ -320,6 +320,7 @@
         styleId: 4,
         templateId: 5
       });
+      
     layer_4 = new google.maps.FusionTablesLayer({
         query: {
           select: "col15",
@@ -328,8 +329,6 @@
         styleId: 5,
         templateId: 5
       });
-    
-    
     
     //////////////// Affichage coordonnees ////////////////
     
@@ -384,24 +383,16 @@
       });
       var queryText = encodeURIComponent("SELECT 'Y','X' FROM 15-Nk4x_J0SYJckgdJxtCltQh_BTHzuvZiz2EM0YP WHERE 'Pseudo' = '" + searchString + "'");
       query = new google.visualization.Query('http://www.google.com/fusiontables/gvizdata?tq=' + queryText);
-      query.send(zoomTo);
-    }
-
-
-
-    
-    function zoomTo(response) {
-    numRows = response.getDataTable().getNumberOfRows();
-    if(numRows == 1){
+      query.send(function(response) {
+   	numRows = response.getDataTable().getNumberOfRows();
+    	if(numRows == 1){
             var lat = response.getDataTable().getValue(0,0)/100;
             var lng = response.getDataTable().getValue(0,1)/100;
             map.setCenter(new google.maps.LatLng(lat,lng));
             map.setZoom(12);
 			}
-        };
-
-		
-		
+        });
+      }
         
     function changeMap_1() {
       var whereClause;
