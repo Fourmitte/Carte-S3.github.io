@@ -641,7 +641,6 @@
     });
     Radar.push(marker_310);
     
- 
     //////////////// Fusion Table ////////////////
   
     layer_0 = new google.maps.FusionTablesLayer({
@@ -695,23 +694,16 @@
         'X=' + Math.round(event.latLng.lng()*100);
     });
 
-
-    // Normalizes the coords that tiles repeat across the x axis (horizontally)
-    // like the standard Google map tiles.
     function getNormalizedCoord(coord, zoom) {
     var y = coord.y;
     var x = coord.x;
 
-    // tile range in one direction range is dependent on zoom level
-    // 0 = 1 tile, 1 = 2 tiles, 2 = 4 tiles, 3 = 8 tiles, etc
     var tileRange = 1 << zoom;
 
-    // don't repeat across y-axis (vertically)
     if (y < 0 || y >= tileRange) {
     return null;
     }
 
-    // repeat across x-axis
     if (x < 0 || x >= tileRange) {
     x = (x % tileRange + tileRange) % tileRange;
     }
@@ -786,11 +778,9 @@
             marker_210.setPosition(new google.maps.LatLng(lat-2.1, lng));
             marker_260.setPosition(new google.maps.LatLng(lat-2.6, lng));
             marker_310.setPosition(new google.maps.LatLng(lat-3.1, lng));
-            
         });
     }
-
-       
+    
     function changeMap_1() {
       var whereClause;
       var searchString = document.getElementById('search-string_1').value.replace(/'/g, "\\'");
@@ -862,7 +852,6 @@
       map.setCenter(new google.maps.LatLng(3,0.25));
       map.setZoom(7); 
     };
-
     
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDEwTVpPn9CHeGQLtKzcUFyxWJLg85P4yQ&signed_in=true&libraries=visualization&callback=initialize" async defer>
